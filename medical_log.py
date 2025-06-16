@@ -87,6 +87,10 @@ class Viewer:
         self.canvas.get_tk_widget().grid(row=5, column=0, columnspan=4, pady=10)
         self.df = None
 
+        # trace_addは必ず1回だけ
+        self.group_by.trace_add("write", self.on_group_by_change)
+        self.on_group_by_change()  # 初期状態を反映
+
     # ----- event handlers -----
     def load_csv(self):
         p = filedialog.askopenfilename(filetypes=[("CSV", "*.csv")])
@@ -116,10 +120,12 @@ class Viewer:
                 self.month_combo.set('')
                 self.month_label.grid_remove()
                 self.month_combo.grid_remove()
+        # 月リスト更新後に必ず表示状態を同期
+        self.on_group_by_change()
 
     def on_group_by_change(self, *args):
-        # 集計軸が月で月リストがあれば表示、それ以外は非表示
-        if self.group_by.get() == "month" and self.month_combo['values']:
+        # 集計軸が月で月リストが1つでもあれば表示、それ以外は非表示
+        if self.group_by.get() == "month" and len(self.month_combo['values']) > 0:
             self.month_label.grid()
             self.month_combo.grid()
         else:
@@ -127,9 +133,10 @@ class Viewer:
             self.month_combo.grid_remove()
         self.update_graph()
 
-    def update_graph(self):
+    def update_graph(self, *args):
+        # グラフ表示処理
         if self.df is None:
-            messagebox.showwarning("警告", "CSV を先に読み込んでください"); return
+            return  # CSV未読込なら何もしない
         if self.group_by.get() == "month":
             # 月選択で絞り込み、その月の病院ごと
             selected_month = self.month_combo.get()
