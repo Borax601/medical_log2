@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>医療費ビューワ</title>
+    <style>
+        body { font-family: sans-serif; margin: 2em; }
+        table { border-collapse: collapse; width: 100%; margin-top: 1em; }
+        th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        form { background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin-bottom: 2em; }
+        .graphs { display: flex; flex-wrap: wrap; gap: 2em; align-items: flex-start; margin-top: 2em;}
+        .graph-container { flex: 1; min-width: 300px; }
+        img { max-width: 100%; height: auto; }
+        button { padding: 5px 10px; }
+    </style>
+</head>
+<body>
+    <h1>医療費ビューワ</h1>
+
+    <h2>新しいデータを追加</h2>
+    <form method="post" action="/">
+        日付: <input type="date" name="date" required>
+        医療機関名: <input type="text" name="hospital" required>
+        金額: <input type="number" name="amount" required>
+        区分: <input type="text" name="description" required>
+        <button type="submit">追加</button>
+    </form>
+
+    <h2>データ絞り込み</h2>
+    <form method="get" action="/">
+        病院:
+        <select name="hospital">
+            {% for h in hospitals %}
+                <option value="{{ h }}" {% if h == selected_hospital %}selected{% endif %}>{{ h }}</option>
+            {% endfor %}
+        </select>
+        月:
+        <select name="month">
+            {% for m in months %}
+                <option value="{{ m }}" {% if m == selected_month %}selected{% endif %}>{{ m }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit">絞り込み</button>
+    </form>
+
+    <h2>データ一覧</h2>
+    <table>
+        <thead>
+            <tr>
+                {% for col in columns %}
+                    <th>{{ col }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in records %}
+            <tr>
+                {% for col in columns %}
+                    <td>{{ row[col] }}</td>
+                {% endfor %}
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="{{ columns|length }}">データがありません。</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="graphs">
+        <div class="graph-container">
+            {% if bar_img %}
+                <h3>医療機関ごとの合計金額</h3>
+                <img src="data:image/png;base64,{{ bar_img }}" alt="棒グラフ">
+            {% endif %}
+        </div>
+        <div class="graph-container">
+            {% if pie_img %}
+                <h3>区分ごとの金額割合</h3>
+                <img src="data:image/png;base64,{{ pie_img }}" alt="円グラフ">
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>
