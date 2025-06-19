@@ -127,5 +127,26 @@ def index():
         pie_img=pie_img
     )
 
+@app.route('/delete', methods=['POST'])
+def delete():
+    date = request.form.get('date')
+    hospital = request.form.get('hospital')
+    amount = request.form.get('amount')
+    description = request.form.get('description')
+
+    df = pd.read_csv(CSV_FILE, dtype=str)
+    def match_row(row):
+        # descriptionが空欄やnanでも一致とみなす
+        desc = row[CATEGORY_COL]
+        return (
+            row[DATE_COL] == date and
+            row[HOSPITAL_COL] == hospital and
+            row[AMOUNT_COL] == amount and
+            (desc == description or pd.isna(desc) or desc == '' or desc == 'nan' or description == '' or description == 'nan')
+        )
+    df = df[~df.apply(match_row, axis=1)]
+    df.to_csv(CSV_FILE, index=False, encoding='utf-8')
+    return redirect(url_for('index'))
+
 if __name__ == '__main__':
     app.run(debug=True)
